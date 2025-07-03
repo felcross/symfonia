@@ -2,9 +2,15 @@
 
 namespace App\Controller;
 
+use App\Model\ClimaApiDTO;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -12,17 +18,27 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class WeatherController extends AbstractController {
 
 
-    #[Route('/clima/tempo/{guess<\d+>?50}',  host: 'api.localhost')]
-    public function climatempoApi(int $guess): Response 
-    {
-          $draw = random_int(0,100);
+    //#[Route('/clima/tempo/{guess<\d+>?50}',  host: 'api.localhost')]
+    #[Route('/clima/api')]
 
-          $forecast = $draw < $guess ? 'Dia de chuva':'Dia de Sol'; 
+    public function climatempoApi(#[MapRequestPayload] ClimaApiDTO $dto ): Response 
+    {    
+          
+         $forecasts = [];
+
+          for($i = 0; $i < $dto->trials;$i++) {
+             $draw = random_int(0,100);
+              $forecast = $draw < $dto->guess ? 'Dia de chuva':'Dia de Sol'; 
+              $forecasts[] = $forecast;
+          }
+
+          
           
           $json = [
-              'forecast' =>$forecast,
+              'forecasts' =>$forecasts ,
+              'guess' => $dto->guess,
               'self' => $this->generateUrl('app_weather_climatempo',
-              ['guess'=> 40],
+              ['guess'=> $dto->guess],
                UrlGeneratorInterface::ABSOLUTE_URL),
           ];
 
@@ -31,17 +47,27 @@ class WeatherController extends AbstractController {
     }
 
 
-    #[Route('/clima/tempo/{guess<\d+>?50}')]
-    public function climatempo(int $guess): Response 
-    {
-          $draw = random_int(0,100);
+    #[Route('/clima/tempo/{guess<\d+>}')]
+    public function climatempo(Request $request, RequestStack $requestStack , ?int $guess): Response 
+    {      $session = $requestStack->getSession();
+      if($guess) {$session->set('guess',$guess);}
+       else {$session->get('guess',50);}
+           
+         $trials = $request->get('trials',1);
+         
+;          
+         $forecasts = [];
 
-          $forecast = $draw < $guess ? 'Dia de chuva':'Dia de Sol'; 
-          
-  
+          for($i = 0; $i < $trials;$i++) {
+             $draw = random_int(0,100);
+              $forecast = $draw < $guess ? 'Dia de chuva':'Dia de Sol'; 
+              $forecasts[] = $forecast;
+          }    
+
 
          return $this->render('weather/clima.html.twig' ,[
-            'forecast' => $forecast
+            'forecasts' => $forecasts,
+            'guess' => $guess,
           ]);
 
     }
@@ -49,13 +75,17 @@ class WeatherController extends AbstractController {
 
     #[Route('/clima/tempo/{guess}')]
     public function clima(String $guess): Response 
-    {
+    {   
+         $validos = ['sol','chuva','neve'];
+         if(!in_array($guess, $validos)) {
+            throw $this->createNotFoundException('Previsão inválida');
+      }
           
 
-          $forecast ="Dia de {$guess}";
+          $forecasts ="Dia de {$guess}";
 
           return $this->render('weather/clima.html.twig' ,[
-            'forecast' => $forecast
+            'forecasts' => [$forecasts]
           ]);
 
     }

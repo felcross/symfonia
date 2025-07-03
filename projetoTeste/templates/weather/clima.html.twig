@@ -1,23 +1,33 @@
-  {% extends 'base.html.twig' %}         
-{% block title %}TestPage{% endblock %}
+{% extends 'base.html.twig' %}
+{% block title %}TestPage
+{% endblock %}
 
- 
-   {% block body %}
-  <h1>Previsão do tempo</h1>
-  <p>{{ forecast }}</p>
 
-  <nav>
-  <a href="{{ path('app_weather_climatempo',{ guess:90 }) }} "> Tente de novo!</a>
-  </nav>
-   {% endblock %}
+{% block body %}
+	<h1>Previsão do tempo</h1>
 
-     {% block javascripts %}
-         {{parent()}}
+	{% for forecast in forecasts %}
+		<p>{{ forecast }}</p>
 
-         <script>
-          const route = "{{  path('app_weather_climatempo') }}";
-           const route2 = "{{  url('app_weather_climatempo')| escape('js') }}";
-          console.log(route2);
-         </script>
+	{% endfor %}
 
-        {% endblock %}
+  
+	{% if guess %} <p> palpite: {{guess}} </p> {% endif %}
+
+
+	<nav>
+		<a href="{{ path('app_weather_climatempo',{ guess:90 }) }} ">
+			Tente de novo!</a>
+	</nav>
+{% endblock %}
+
+{% block javascripts %}
+	{{parent()}}
+
+	<script>
+		const route = "{{ path('app_weather_climatempo') }}";
+const route2 = "{{ url('app_weather_climatempo')| escape('js') }}";
+console.log(route2);
+	</script>
+
+{% endblock %}

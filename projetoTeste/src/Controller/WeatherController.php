@@ -18,40 +18,19 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 class WeatherController extends AbstractController {
 
 
-    //#[Route('/clima/tempo/{guess<\d+>?50}',  host: 'api.localhost')]
-    #[Route('/clima/api')]
-
-    public function climatempoApi(#[MapRequestPayload] ClimaApiDTO $dto ): Response 
-    {    
-          
-         $forecasts = [];
-
-          for($i = 0; $i < $dto->trials;$i++) {
-             $draw = random_int(0,100);
-              $forecast = $draw < $dto->guess ? 'Dia de chuva':'Dia de Sol'; 
-              $forecasts[] = $forecast;
-          }
-
-          
-          
-          $json = [
-              'forecasts' =>$forecasts ,
-              'guess' => $dto->guess,
-              'self' => $this->generateUrl('app_weather_climatempo',
-              ['guess'=> $dto->guess],
-               UrlGeneratorInterface::ABSOLUTE_URL),
-          ];
-
-          return new JsonResponse($json);
-
-    }
 
 
     #[Route('/clima/tempo/{guess<\d+>}')]
-    public function climatempo(Request $request, RequestStack $requestStack , ?int $guess): Response 
-    {      $session = $requestStack->getSession();
-      if($guess) {$session->set('guess',$guess);}
-       else {$session->get('guess',50);}
+    public function climatempo(Request $request, RequestStack $requestStack , ?int $guess = null): Response 
+    {      
+      
+      $session = $requestStack->getSession();
+      if($guess) {
+        $session->set('guess',$guess);
+        $this->addFlash('info',"Sua previsão é de {$guess} % de chuva");
+      }
+      else { $guess = $session->get('guess');}
+
            
          $trials = $request->get('trials',1);
          
@@ -85,7 +64,8 @@ class WeatherController extends AbstractController {
           $forecasts ="Dia de {$guess}";
 
           return $this->render('weather/clima.html.twig' ,[
-            'forecasts' => [$forecasts]
+            'forecasts' => [$forecasts],
+            'guess' => $guess
           ]);
 
     }

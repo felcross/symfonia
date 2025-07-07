@@ -1,0 +1,12 @@
+{
+    "Previsões": [
+		{% for forecast in forecasts %}
+		"{{ forecast|raw }}" {% if not loop.last %},{% endif %}
+
+	{% endfor %}
+
+	 ]
+}
+
+  
+

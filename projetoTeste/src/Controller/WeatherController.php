@@ -13,6 +13,7 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\TemplateController;
 
 
 class WeatherController extends AbstractController {
@@ -20,7 +21,7 @@ class WeatherController extends AbstractController {
 
 
 
-    #[Route('/clima/tempo/{guess<\d+>}')]
+    #[Route('/clima/tempo/{guess<\d+>}')] 
     public function climatempo(Request $request, RequestStack $requestStack , ?int $guess = null): Response 
     {      
       
@@ -33,6 +34,7 @@ class WeatherController extends AbstractController {
 
            
          $trials = $request->get('trials',1);
+         $format = $request->get('format','html');
          
 ;          
          $forecasts = [];
@@ -44,10 +46,16 @@ class WeatherController extends AbstractController {
           }    
 
 
-         return $this->render('weather/clima.html.twig' ,[
+         $html =  $this->renderView("weather/clima.{$format}.twig" ,[
             'forecasts' => $forecasts,
             'guess' => $guess,
           ]);
+
+          $response = new Response($html);
+
+          return $response;
+
+
 
     }
 

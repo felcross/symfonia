@@ -32,6 +32,7 @@
 		{# const route = "{{ path('app_weather_climatempo') }}"; #}
 const route2 = "{{ url('app_weather_climatempo')| escape('js') }}";
 console.log(route2);
+console.log("{{ api_key | escape('js') }}");
 	</script>
 
 {% endblock %}
